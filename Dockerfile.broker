@@ -1,0 +1,11 @@
+FROM node:latest
+
+COPY ./scripts/wait-for-it.sh ./wait-for-it.sh
+
+WORKDIR /app
+COPY package.json .
+RUN npm i
+
+COPY ./src/broker.js ./broker.js
+
+CMD node ./broker.js

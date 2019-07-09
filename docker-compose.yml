@@ -1,0 +1,89 @@
+version: '3.4'
+x-env: &x-env
+  DEBUG : ${DEBUG:-}
+services:
+  broker:
+    build:
+      context: .
+      dockerfile: Dockerfile.broker
+    container_name: broker
+    environment:
+      <<: *x-env
+    depends_on:
+      - redis
+    ports:
+      - "1883:1883"
+      - "80:80"
+    volumes:
+      - type: bind
+        source: ./src/broker.js
+        target: /app/broker.js
+        read_only: true
+    command:
+      >
+       /wait-for-it.sh redis:6379 -- bash -c
+       'npm run nodemon:broker'
+  publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile.publisher
+    container_name: publisher
+    environment:
+      <<: *x-env
+    depends_on:
+      - broker
+    volumes:
+      - type: bind
+        source: ./src/publisher.js
+        target: /app/publisher.js
+        read_only: true
+    command:
+      >
+       /wait-for-it.sh broker:1883 -- bash -c
+       'npm run nodemon:publisher'
+  subscriber:
+    build:
+      context: .
+      dockerfile: Dockerfile.subscriber
+    container_name: subscriber
+    environment:
+      <<: *x-env
+    depends_on:
+      - broker
+      - publisher
+      - influxdb
+    volumes:
+      - type: bind
+        source: ./src/subscriber.js
+        target: /app/subscriber.js
+        read_only: true
+    command:
+      >
+       /wait-for-it.sh influxdb:8086 --
+       /wait-for-it.sh broker:1883 -- bash -c
+       'npm run nodemon:subscriber'
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+  influxdb:
+    image: "influxdb:1.7"
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=mqtt
+  grafana:
+    build:
+      context: .
+      dockerfile: Dockerfile.grafana
+    container_name: grafana
+    links:
+      - influxdb
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+    ports:
+      - "3000:3000"

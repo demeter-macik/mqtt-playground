@@ -1,0 +1,27 @@
+{
+  "name": "mqtt-playground",
+  "version": "0.1.0",
+  "description": "MQTT playground",
+  "main": "",
+  "scripts": {
+    "docker:down": "docker-compose down -v",
+    "docker:build": "docker-compose down -v && docker-compose build",
+    "docker:start": "docker-compose up",
+    "docker:bash:broker": "docker-compose run --rm --name broker broker bash",
+    "docker:bash:publisher": "docker-compose run --rm --name publisher publisher bash",
+    "docker:bash:subscriber": "docker-compose run --rm --name subscriber subscriber bash",
+    "nodemon:broker": "./node_modules/.bin/nodemon --watch broker.js --exec node broker.js",
+    "nodemon:publisher": "./node_modules/.bin/nodemon --watch publisher.js --exec node publisher.js",
+    "nodemon:subscriber": "./node_modules/.bin/nodemon --watch subscriber.js --exec node subscriber.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async-mqtt": "^2.3.0",
+    "influx": "^5.4.0",
+    "mosca": "^2.8.3",
+    "mqtt": "^3.0.0",
+    "nodemon": "^1.19.1",
+    "redis": "^2.8.0"
+  }
+}
